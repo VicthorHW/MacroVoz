@@ -8,6 +8,7 @@
 [![OS](https://img.shields.io/badge/OS-Windows-0078D6?logo=windows&logoColor=white)](#)
 [![Status](https://img.shields.io/badge/Status-Ativo-success)](#)
 [![AI Powered](https://img.shields.io/badge/AI-Faster--Whisper-orange)](#)
+![Status](https://img.shields.io/badge/Status-Alpha-orange)
 
 Uma ferramenta de automação (Macro) inteligente que transforma sua fala em texto instantaneamente, rodando de forma **100% offline** na sua própria máquina. Ideal para conversar com IAs, preencher formulários e redigir textos de forma ágil, sem precisar digitar.
 
