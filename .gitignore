@@ -1,0 +1,23 @@
+@"
+# Ignorar compilações e receitas do PyInstaller
+build/
+dist/
+*.spec
+
+# Ignorar banco de dados local, configurações do usuário e áudios
+data/
+temp_voice.wav
+
+# Ignorar cache e arquivos temporários do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar ambientes virtuais (caso você use no futuro)
+venv/
+env/
+"@ | Out-File -Encoding utf8 .gitignore
+
+#demais
+crash_log.txt
