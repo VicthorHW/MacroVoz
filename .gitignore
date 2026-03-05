@@ -14,10 +14,12 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Ignorar ambientes virtuais (caso você use no futuro)
+# Ignorar ambientes virtuais
 venv/
 env/
 "@ | Out-File -Encoding utf8 .gitignore
 
-#demais
+# demais
 crash_log.txt
+MacroVoz_backup.py
+config_macrovoz.json

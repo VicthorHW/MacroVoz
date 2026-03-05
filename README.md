@@ -1,4 +1,6 @@
 <div align="center">
+  <img src="assets/macrovoz-logo.png" alt="Logo MacroVoz" width="200">
+  <br>
   
 # 🎙️ MacroVoz - IA Local de Transcrição (Speech-to-Text)
 

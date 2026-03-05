@@ -3,16 +3,17 @@ import subprocess
 import sys
 import re
 import shutil
+from faster_whisper.utils import download_model
 
 def menu_interativo():
     print("="*50)
     print(" 🛠️  CONSTRUTOR DO MACROVOZ - MENU DE VERSÕES")
     print("="*50)
     print("Escolha a edição que deseja compilar:\n")
-    print("1) Edição LITE      (Modelo: 'tiny')    - Super leve, menor precisão.")
-    print("2) Edição STANDARD  (Modelo: 'base')    - Equilíbrio básico.")
-    print("3) Edição PRO       (Modelo: 'small')   - Excelente precisão, peso moderado. (Recomendado)")
-    print("4) Edição ULTRA     (Modelo: 'large-v3')- Precisão máxima, muito pesado. (O original)")
+    print("1) Edição LITE      (Modelo: 'tiny')    - ~75MB (IA)")
+    print("2) Edição STANDARD  (Modelo: 'base')    - ~145MB (IA)")
+    print("3) Edição PRO       (Modelo: 'small')   - ~480MB (IA) - Recomendado")
+    print("4) Edição ULTRA     (Modelo: 'large-v3')- ~3.0GB (IA)")
     print("="*50)
     
     escolha = input("Digite o número da versão (1 a 4): ").strip()
@@ -25,17 +26,16 @@ def menu_interativo():
     }
     
     if escolha not in opcoes:
-        print("Opção inválida! Cancelando compilação.")
+        print("Opção inválida! Cancelando.")
         sys.exit(1)
         
     return opcoes[escolha]
 
 def alterar_modelo_no_codigo(arquivo_py, novo_modelo):
-    """Lê o arquivo principal, troca o modelo da IA e salva temporariamente."""
     with open(arquivo_py, "r", encoding="utf-8") as f:
         codigo = f.read()
     
-    # Procura a linha onde o modelo é definido e substitui apenas o nome do modelo
+    # Atualiza as chamadas de WhisperModel no código fonte
     codigo_modificado = re.sub(r'WhisperModel\((["\']).*?(["\'])', f'WhisperModel("{novo_modelo}"', codigo)
     
     with open(arquivo_py, "w", encoding="utf-8") as f:
@@ -46,44 +46,50 @@ def construir_exe():
     nome_app = config_build["nome_app"]
     modelo_ia = config_build["modelo_ia"]
     
-    print(f"\n🚀 Iniciando compilação da versão: {nome_app} (Modelo: {modelo_ia})")
+    # --- PASSO NOVO: VERIFICAÇÃO / DOWNLOAD DO MODELO ---
+    print(f"\n🔍 Verificando se o modelo '{modelo_ia}' está disponível...")
+    try:
+        # Se o modelo não existir, ele baixa agora com barra de progresso no terminal
+        download_model(modelo_ia)
+        print(f"✅ Modelo '{modelo_ia}' pronto para uso.")
+    except Exception as e:
+        print(f"❌ Erro ao baixar o modelo: {e}")
+        sys.exit(1)
+    # ----------------------------------------------------
+
+    print(f"\n🚀 Iniciando compilação da versão: {nome_app}")
     
     caminho_base = sys.prefix
     pasta_site_packages = os.path.join(caminho_base, "Lib", "site-packages")
     arquivo_principal = "MacroVoz.py"
     arquivo_backup = "MacroVoz_backup.py"
+    arquivo_ico = os.path.join("assets", "macrovoz-icone.ico")
     
     if sys.prefix == sys.base_prefix:
         print("\nAVISO: Você não está no ambiente virtual (venv)!")
-        print("Cancele (Ctrl+C) e ative o (venv) para evitar um programa gigante.\n")
         import time; time.sleep(3)
     
-    # 1. Faz backup do arquivo original e altera o código para a versão escolhida
     shutil.copyfile(arquivo_principal, arquivo_backup)
     alterar_modelo_no_codigo(arquivo_principal, modelo_ia)
     
     try:
-        # 2. Configura os parâmetros do PyInstaller
         comando = [
             "python", "-m", "PyInstaller",
             "--noconfirm",
             "--onedir",
             "--windowed",
-            f"--name={nome_app}", # Usa o codinome escolhido
-            
+            f"--icon={arquivo_ico}",
+            f"--name={nome_app}",
+            "--add-data=assets;assets",      # Inclui a pasta assets (logo e ícone)
             "--collect-data=faster_whisper", 
             "--collect-all=customtkinter",   
             
-            # DIETA RIGOROSA: Bloqueando bibliotecas gigantes
             "--exclude-module=matplotlib",
             "--exclude-module=scipy",
             "--exclude-module=pandas",
-            "--exclude-module=IPython",
-            "--exclude-module=jupyter",
-            "--exclude-module=torch",        # O maior vilão de peso (~2GB)
+            "--exclude-module=torch",        # Dieta rigorosa
             "--exclude-module=torchaudio",
             "--exclude-module=torchvision",
-            "--exclude-module=tensorboard",
             
             f"--add-data={os.path.join(pasta_site_packages, 'ctranslate2')};ctranslate2", 
             f"--add-binary={os.path.join(pasta_site_packages, 'nvidia', 'cublas', 'bin', '*.dll')};.", 
@@ -92,8 +98,6 @@ def construir_exe():
             arquivo_principal
         ]
 
-        print("\n⏳ Empacotando... Isso vai demorar alguns minutos. Pegue um café!\n")
-        
         processo = subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         for linha in processo.stdout:
             print(linha.strip())
@@ -105,10 +109,9 @@ def construir_exe():
             print("\n❌ Houve um erro na compilação.")
             
     finally:
-        # 3. Restaura o arquivo original independentemente de erro ou sucesso
         shutil.copyfile(arquivo_backup, arquivo_principal)
         os.remove(arquivo_backup)
-        print("🔄 Código original do MacroVoz.py restaurado com segurança.")
+        print("🔄 Código original do MacroVoz.py restaurado.")
 
 if __name__ == "__main__":
     construir_exe()
