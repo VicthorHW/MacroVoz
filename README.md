@@ -78,7 +78,7 @@ Se você deseja modificar o código, contribuir com o projeto ou apenas rodar di
 Abra o seu terminal e baixe o código-fonte:
 ```bash
 git clone https://github.com/VicthorHW/MacroVoz
-cd faster-whisper-offline
+cd MacroVoz
 ```
 
 ### 3. Criando a "Sala Limpa" (Ambiente Virtual)
